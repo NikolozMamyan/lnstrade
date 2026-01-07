@@ -1,17 +1,264 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-        {% block stylesheets %}
-        {% endblock %}
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}LNSTRADE{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        {% block javascripts %}
-            {% block importmap %}{{ importmap('app') }}{% endblock %}
-        {% endblock %}
-    </head>
-    <body>
-        {% block body %}{% endblock %}
-    </body>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
+
+    {% block stylesheets %}
+    <style>
+        :root{
+            /* Palette type Instagram */
+            --ig1:#fd1d1d;
+            --ig2:#f56040;
+            --ig3:#f77737;
+            --ig4:#fcaf45;
+            --ig6:#c13584;
+            --ig7:#833ab4;
+            --ig8:#405de6;
+
+            --bg:#0b0d12;
+            --panel: rgba(255,255,255,.10);
+            --panel-2: rgba(255,255,255,.14);
+            --text: rgba(255,255,255,.92);
+            --muted: rgba(255,255,255,.70);
+            --stroke: rgba(255,255,255,.18);
+            --shadow: 0 14px 40px rgba(0,0,0,.35);
+
+            /* Accents pour le convertisseur (cohérent avec le header) */
+            --accent: var(--ig8);
+            --accent-2: var(--ig6);
+            --accent-3: var(--ig4);
+            --danger: #ff5a5f;
+        }
+
+        *{ box-sizing:border-box; }
+        html,body{ height:100%; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+            color: var(--text);
+            background:
+                radial-gradient(1200px 600px at 10% -10%, rgba(64,93,230,.35), transparent 55%),
+                radial-gradient(900px 500px at 95% 0%, rgba(193,53,132,.40), transparent 55%),
+                radial-gradient(900px 700px at 50% 110%, rgba(253,29,29,.22), transparent 55%),
+                var(--bg);
+        }
+
+        /* Header */
+        .topbar{
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--stroke);
+            background: linear-gradient(90deg,
+                rgba(64,93,230,.20),
+                rgba(131,58,180,.22),
+                rgba(193,53,132,.22),
+                rgba(253,29,29,.18),
+                rgba(252,175,69,.16)
+            );
+        }
+        .topbar__inner{
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 14px 18px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap: 16px;
+        }
+
+        .brand{ display:flex; align-items:center; gap: 12px; min-width: 240px; }
+        .brand__logo{
+            width: 46px; height: 46px;
+            border-radius: 14px;
+            display:grid; place-items:center;
+            font-weight: 900;
+            letter-spacing: .5px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,.20);
+            background: linear-gradient(135deg, var(--ig8), var(--ig7), var(--ig6), var(--ig1), var(--ig4));
+        }
+        .brand__title{
+            font-weight: 900;
+            letter-spacing: .3px;
+            line-height: 1.1;
+        }
+
+        .breadcrumb{
+            margin-top: 4px;
+            font-size: 13px;
+            color: var(--muted);
+            display:flex;
+            align-items:center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumb a{
+            color: rgba(255,255,255,.80);
+            text-decoration:none;
+            border-bottom: 1px solid transparent;
+        }
+        .breadcrumb a:hover{ border-bottom-color: rgba(255,255,255,.45); }
+        .breadcrumb__sep{ opacity:.65; }
+        .breadcrumb__current{ color: rgba(255,255,255,.92); font-weight: 700; }
+
+        .topbar__right{ display:flex; align-items:center; gap: 12px; }
+
+        .notif{
+            position: relative;
+            width: 44px; height: 44px;
+            border-radius: 14px;
+            border: 1px solid var(--stroke);
+            background: rgba(255,255,255,.08);
+            color: var(--text);
+            display:grid;
+            place-items:center;
+            cursor:pointer;
+            box-shadow: 0 10px 25px rgba(0,0,0,.25);
+            transition: transform .15s ease, background .15s ease, border-color .15s ease;
+        }
+        .notif:hover{
+            transform: translateY(-1px);
+            background: rgba(255,255,255,.12);
+            border-color: rgba(255,255,255,.28);
+        }
+        .notif__icon{ font-size: 18px; }
+        .notif__badge{
+            position:absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 999px;
+            display:grid;
+            place-items:center;
+            font-size: 12px;
+            font-weight: 900;
+            border: 2px solid rgba(15,16,22,1);
+            background: linear-gradient(135deg, var(--ig1), var(--ig4));
+            box-shadow: 0 10px 18px rgba(0,0,0,.35);
+        }
+
+        .usercard{
+            display:flex;
+            align-items:center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 16px;
+            border: 1px solid var(--stroke);
+            background: rgba(255,255,255,.08);
+            box-shadow: 0 10px 25px rgba(0,0,0,.25);
+            cursor:pointer;
+            transition: transform .15s ease, background .15s ease, border-color .15s ease;
+        }
+        .usercard:hover{
+            transform: translateY(-1px);
+            background: rgba(255,255,255,.12);
+            border-color: rgba(255,255,255,.28);
+        }
+
+        .usercard__avatar{
+            position: relative;
+            width: 40px; height: 40px;
+            border-radius: 999px;
+            display:grid;
+            place-items:center;
+            background: rgba(0,0,0,.25);
+            overflow:hidden;
+        }
+        .usercard__ring{
+            position:absolute;
+            inset: -2px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, var(--ig8), var(--ig7), var(--ig6), var(--ig1), var(--ig4));
+        }
+        .usercard__initials{
+            position: relative;
+            width: 34px; height: 34px;
+            border-radius: 999px;
+            display:grid;
+            place-items:center;
+            font-weight: 900;
+            background: rgba(15,16,22,.95);
+            border: 1px solid rgba(255,255,255,.16);
+            letter-spacing: .5px;
+        }
+        .usercard__meta{ line-height: 1.05; }
+        .usercard__name{ font-weight: 900; font-size: 14px; }
+        .usercard__role{ font-size: 12px; color: var(--muted); margin-top: 3px; }
+        .usercard__chev{ opacity: .8; margin-left: 2px; }
+
+        /* Main container */
+        main.page{
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px 18px 40px;
+        }
+
+        @media (max-width: 720px){
+            .brand__text{ display:none; }
+            .usercard__meta{ display:none; }
+            .usercard{ padding: 8px; }
+        }
+    </style>
+    {% endblock %}
+
+    {% block javascripts %}
+        {% block importmap %}{{ importmap('app') }}{% endblock %}
+    {% endblock %}
+</head>
+
+<body>
+<header class="topbar">
+    <div class="topbar__inner">
+        <div class="brand">
+            <div class="brand__logo">LNS</div>
+            <div class="brand__text">
+                <div class="brand__title">LNSTRADE</div>
+                <nav class="breadcrumb" aria-label="Fil d’ariane">
+                    <a href="#">Accueil</a>
+                    <span class="breadcrumb__sep">›</span>
+                    <span class="breadcrumb__current">{% block breadcrumb %}Dashboard{% endblock %}</span>
+                </nav>
+            </div>
+        </div>
+
+        <div class="topbar__right">
+            <button class="notif" type="button" aria-label="Notifications">
+                <span class="notif__icon" aria-hidden="true">🔔</span>
+                <span class="notif__badge">3</span>
+            </button>
+
+            <div class="usercard" title="Compte">
+                <div class="usercard__avatar">
+                    <span class="usercard__ring"></span>
+                    <span class="usercard__initials">
+                        {{ app.user ? (app.user.email|slice(0,1)|upper) : 'G' }}
+                    </span>
+                </div>
+                <div class="usercard__meta">
+                    <div class="usercard__name">
+                        {{ app.user ? (app.user.email|split('@')[0]) : 'Invité' }}
+                    </div>
+                    <div class="usercard__role">
+                        {{ app.user ? 'Connecté' : 'Non connecté' }}
+                    </div>
+                </div>
+                <div class="usercard__chev" aria-hidden="true">▾</div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="page">
+    {% block body %}{% endblock %}
+</main>
+</body>
 </html>

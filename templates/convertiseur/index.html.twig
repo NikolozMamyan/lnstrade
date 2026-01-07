@@ -1,0 +1,231 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Convertisseur XLSX → CSV{% endblock %}
+{% block breadcrumb %}Convertisseur XLSX → CSV{% endblock %}
+
+{% block body %}
+<style>
+    /* Page Convertisseur (thème dark cohérent) */
+    .conv-wrap{
+        display:flex;
+        justify-content:center;
+        padding-top: 18px;
+    }
+
+    .conv-card{
+        width: 100%;
+        max-width: 780px;
+        border-radius: 18px;
+        border: 1px solid var(--stroke);
+        background: rgba(255,255,255,.08);
+        box-shadow: 0 18px 50px rgba(0,0,0,.35);
+        overflow: hidden;
+    }
+
+    .conv-card__top{
+        padding: 18px 18px 16px;
+        border-bottom: 1px solid rgba(255,255,255,.10);
+        background: linear-gradient(135deg,
+            rgba(64,93,230,.20),
+            rgba(131,58,180,.20),
+            rgba(193,53,132,.18),
+            rgba(252,175,69,.14)
+        );
+    }
+
+    .conv-title{
+        margin: 0;
+        font-size: 20px;
+        font-weight: 900;
+        letter-spacing: .2px;
+        display:flex;
+        align-items:center;
+        gap: 10px;
+    }
+
+    .conv-sub{
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+    }
+
+    .error-box{
+        margin: 14px 18px 0;
+        border-radius: 14px;
+        border: 1px solid rgba(255,90,95,.35);
+        background: rgba(255,90,95,.12);
+        padding: 12px 12px;
+        color: rgba(255,255,255,.92);
+    }
+
+    .conv-card__body{
+        padding: 18px;
+    }
+
+    .drop{
+        border: 1.5px dashed rgba(255,255,255,.28);
+        border-radius: 16px;
+        padding: 22px 16px;
+        text-align:center;
+        background: rgba(255,255,255,.06);
+        transition: transform .15s ease, background .15s ease, border-color .15s ease;
+        cursor: pointer;
+    }
+    .drop:hover{
+        transform: translateY(-1px);
+        background: rgba(255,255,255,.08);
+        border-color: rgba(255,255,255,.40);
+    }
+    .drop.dragover{
+        background: rgba(64,93,230,.10);
+        border-color: rgba(64,93,230,.65);
+        box-shadow: 0 12px 30px rgba(64,93,230,.08);
+    }
+
+    .drop__icon{
+        width: 54px; height: 54px;
+        margin: 0 auto 10px;
+        border-radius: 16px;
+        display:grid;
+        place-items:center;
+        font-size: 22px;
+        font-weight: 900;
+        border: 1px solid rgba(255,255,255,.18);
+        background: linear-gradient(135deg, rgba(64,93,230,.35), rgba(193,53,132,.25), rgba(252,175,69,.20));
+        box-shadow: 0 16px 40px rgba(0,0,0,.25);
+    }
+
+    .drop__p{ margin: 6px 0; color: var(--muted); }
+    .drop__p strong{ color: rgba(255,255,255,.92); }
+
+    .file-input{ display:none; }
+
+    .btn-row{
+        display:flex;
+        gap: 12px;
+        margin-top: 14px;
+        justify-content:center;
+        flex-wrap: wrap;
+    }
+
+    .btn{
+        border: 1px solid rgba(255,255,255,.18);
+        border-radius: 14px;
+        padding: 10px 14px;
+        font-weight: 900;
+        cursor:pointer;
+        transition: transform .15s ease, filter .15s ease, background .15s ease;
+        color: rgba(255,255,255,.94);
+        background: rgba(255,255,255,.08);
+    }
+    .btn:hover{ transform: translateY(-1px); }
+
+    .btn--primary{
+        border: none;
+        background: linear-gradient(135deg, var(--ig8), var(--ig7), var(--ig6), var(--ig1), var(--ig4));
+        box-shadow: 0 18px 40px rgba(0,0,0,.30);
+    }
+    .btn--primary:hover{ filter: brightness(1.05); }
+
+    .filename{
+        margin-top: 12px;
+        font-size: 13px;
+        color: rgba(255,255,255,.84);
+        display:none;
+        word-break: break-word;
+    }
+
+    .hint{
+        margin-top: 12px;
+        font-size: 12px;
+        color: var(--muted);
+        text-align:center;
+    }
+</style>
+
+<div class="conv-wrap">
+    <div class="conv-card">
+        <div class="conv-card__top">
+            <h2 class="conv-title">
+                <span class="drop__icon" aria-hidden="true">XLSX</span>
+                Convertisseur Excel → CSV
+            </h2>
+            <p class="conv-sub">
+                Dépose un fichier <strong>.xlsx</strong>, on te renvoie un <strong>.csv</strong> propre (séparateur <strong>;</strong>).
+            </p>
+        </div>
+
+        {% if error %}
+            <div class="error-box">⚠️ {{ error }}</div>
+        {% endif %}
+
+        <div class="conv-card__body">
+            <form action="{{ path('app_convert') }}" method="post" enctype="multipart/form-data" id="upload-form" data-turbo="false">
+                <div class="drop" id="drop-area">
+                    <div class="drop__icon" aria-hidden="true">📄</div>
+
+                    <p class="drop__p"><strong>Glisse & dépose</strong> ton fichier ici</p>
+                    <p class="drop__p">ou</p>
+
+                    <div class="btn-row">
+                        <label for="excel_file" class="btn">Parcourir</label>
+                        <button type="submit" class="btn btn--primary">Convertir en CSV</button>
+                    </div>
+
+                    <input type="file" name="excel_file" id="excel_file" class="file-input" accept=".xlsx" required>
+                    <div class="filename" id="filename">Aucun fichier sélectionné</div>
+
+                    <div class="hint">Format accepté : <strong>.xlsx</strong> uniquement</div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const fileInput = document.getElementById('excel_file');
+    const dropArea = document.getElementById('drop-area');
+    const filenameDisplay = document.getElementById('filename');
+
+    fileInput.addEventListener('change', function () {
+        if (this.files && this.files.length > 0) {
+            filenameDisplay.textContent = this.files[0].name;
+            filenameDisplay.style.display = 'block';
+        }
+    });
+
+    ['dragenter','dragover','dragleave','drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e){
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter','dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, () => dropArea.classList.add('dragover'), false);
+    });
+
+    ['dragleave','drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, () => dropArea.classList.remove('dragover'), false);
+    });
+
+    dropArea.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+            fileInput.files = files;
+            filenameDisplay.textContent = files[0].name;
+            filenameDisplay.style.display = 'block';
+        }
+    }, false);
+
+    // Click sur la zone (sauf sur bouton/label) => ouvrir file picker
+    dropArea.addEventListener('click', (e) => {
+        if (e.target.closest('button, label, input, a')) return;
+        fileInput.click();
+    });
+</script>
+{% endblock %}
